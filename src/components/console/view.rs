@@ -1,16 +1,19 @@
 use dioxus::prelude::*;
-use crate::models::{Stage, SimState};
+use crate::models::Stage;
+use super::model::{ControlPanelProps, ConsoleSliderProps};
+use super::controller::{on_slider_input, finish_simulation};
 
 #[component]
-pub fn ControlPanel(state: SimState) -> Element {
+pub fn ControlPanel(props: ControlPanelProps) -> Element {
+    let state = props.state;
     let stage = *state.selected_stage.read();
     let o2_val = *state.o2_flow.read();
     let v_val = *state.voltage.read();
     
     rsx! {
         div {
-            class: "w-1/4 bg-white border-l border-gray-200 p-6 flex flex-col shadow-lg z-10",
-            h2 { class: "text-xl font-black mb-8 text-gray-800 tracking-wider", "CONSOLA DE CONTROL" }
+            class: "w-1/4 bg-slate-800 border-l border-slate-700 p-6 flex flex-col shadow-lg z-10",
+            h2 { class: "text-xl font-black mb-8 text-slate-300 tracking-wider", "CONSOLA DE CONTROL" }
             
             div { class: "flex flex-col gap-10 flex-1",
                 match stage {
@@ -43,11 +46,8 @@ pub fn ControlPanel(state: SimState) -> Element {
             }
             
             button {
-                class: "w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-bold rounded-xl text-lg shadow-xl shadow-blue-200 transition transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50",
-                onclick: move |_| {
-                    let mut f = state.is_finished;
-                    f.set(true);
-                },
+                class: "w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-bold rounded-xl text-lg shadow-xl shadow-blue-900/40 transition transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50",
+                onclick: move |_| finish_simulation(state.is_finished),
                 "IMPRIMIR PIEZA FINAL"
             }
         }
@@ -55,24 +55,21 @@ pub fn ControlPanel(state: SimState) -> Element {
 }
 
 #[component]
-fn ConsoleSlider(name: &'static str, mut val: Signal<i32>, min: i32, max: i32, unit: &'static str) -> Element {
+fn ConsoleSlider(props: ConsoleSliderProps) -> Element {
+    let val_sig = props.val;
     rsx! {
         div { class: "flex flex-col gap-2",
             div { class: "flex justify-between items-end",
-                label { class: "text-sm text-gray-500 tracking-wider font-bold", "{name}" }
-                span { class: "font-mono text-blue-600 font-black", "{(*val.read())}{unit}" }
+                label { class: "text-sm text-slate-400 tracking-wider font-bold", "{props.name}" }
+                span { class: "font-mono text-blue-400 font-black", "{(*props.val.read())}{props.unit}" }
             }
             input {
                 r#type: "range",
-                min: "{min}",
-                max: "{max}",
-                value: "{*val.read()}",
-                oninput: move |e| {
-                    if let Ok(v) = e.value().parse::<i32>() {
-                        val.set(v);
-                    }
-                },
-                class: "w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                min: "{props.min}",
+                max: "{props.max}",
+                value: "{*props.val.read()}",
+                oninput: move |e| on_slider_input(val_sig, e.value()),
+                class: "w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
             }
         }
     }

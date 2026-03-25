@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Stage {
     Fusion,
     Conversion,

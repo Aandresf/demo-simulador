@@ -1,37 +1,18 @@
 use dioxus::prelude::*;
-use crate::models::{Stage, SimState};
+use crate::models::Stage;
+use super::model::{CentralDisplayProps, CentralCardProps};
+use super::controller::{get_chart_color, get_card_styles};
 
 #[component]
-pub fn CentralCard(title: &'static str, val: String, max: f64, current_f: f64, color: &'static str) -> Element {
-    let width_pct = (current_f / max * 100.0).clamp(0.0, 100.0);
-    
-    let bg_color = match color {
-        "orange" => "bg-orange-500",
-        "blue" => "bg-blue-500",
-        "amber" => "bg-amber-500",
-        "emerald" => "bg-emerald-500",
-        "purple" => "bg-purple-500",
-        "indigo" => "bg-indigo-500",
-        "rose" => "bg-rose-500",
-        _ => "bg-gray-500"
-    };
-
-    let text_color = match color {
-        "orange" => "text-orange-600",
-        "blue" => "text-blue-600",
-        "amber" => "text-amber-600",
-        "emerald" => "text-emerald-600",
-        "purple" => "text-purple-600",
-        "indigo" => "text-indigo-600",
-        "rose" => "text-rose-600",
-        _ => "text-gray-600"
-    };
+pub fn CentralCard(props: CentralCardProps) -> Element {
+    let width_pct = (props.current_f / props.max * 100.0).clamp(0.0, 100.0);
+    let (bg_color, text_color) = get_card_styles(props.color);
 
     rsx! {
-        div { class: "bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center justify-between",
-            h3 { class: "text-gray-400 mb-2 text-xs font-bold tracking-widest", "{title}" }
-            div { class: "text-4xl font-black {text_color}", "{val}" }
-            div { class: "w-full h-3 bg-gray-100 rounded-full mt-6 overflow-hidden relative",
+        div { class: "bg-slate-800 p-6 rounded-2xl border border-slate-700/50 shadow-inner flex flex-col items-center justify-between",
+            h3 { class: "text-gray-400 mb-2 text-xs font-bold tracking-widest", "{props.title}" }
+            div { class: "text-4xl font-mono {text_color}", "{props.val}" }
+            div { class: "w-full h-3 bg-slate-900 rounded-full mt-6 overflow-hidden relative",
                 div { 
                     class: "h-full {bg_color} transition-all duration-300",
                     style: "width: {width_pct}%;"
@@ -42,24 +23,18 @@ pub fn CentralCard(title: &'static str, val: String, max: f64, current_f: f64, c
 }
 
 #[component]
-pub fn CentralDisplay(state: SimState) -> Element {
+pub fn CentralDisplay(props: CentralDisplayProps) -> Element {
+    let state = props.state;
     let stage = *state.selected_stage.read();
-    
-    let chart_color = match stage {
-        Stage::Fusion => "bg-orange-400",
-        Stage::Conversion => "bg-amber-500",
-        Stage::Refining => "bg-blue-400",
-        Stage::Atomization => "bg-purple-400",
-        Stage::Printing => "bg-rose-400",
-    };
+    let chart_color = get_chart_color(stage);
 
     rsx! {
         div {
-            class: "w-2/4 flex flex-col p-8 bg-gray-50 relative overflow-y-auto",
+            class: "w-2/4 flex flex-col p-8 bg-slate-900/50 relative overflow-y-auto",
             
             if *state.is_panic.read() {
                 div {
-                    class: "absolute inset-0 bg-red-500/10 z-0 animate-pulse pointer-events-none"
+                    class: "absolute inset-0 bg-red-900/40 z-0 animate-pulse pointer-events-none"
                 }
                 div {
                     class: "absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white shadow-xl px-6 py-2 rounded-full font-bold z-10 animate-fade-in animate-bounce",
@@ -68,8 +43,8 @@ pub fn CentralDisplay(state: SimState) -> Element {
             }
             
             div { class: "z-10 h-full flex flex-col",
-                h1 { class: "text-4xl font-light mb-2 text-gray-800", "{stage.to_string()}" }
-                p { class: "text-gray-500 mb-8 font-medium", "Monitorización en Tiempo Real (1ms tick)" }
+                h1 { class: "text-4xl font-light mb-2 text-slate-100", "{stage.to_string()}" }
+                p { class: "text-slate-400 mb-8 font-medium", "Monitorización en Tiempo Real (1ms tick)" }
                 
                 div { class: "grid grid-cols-2 gap-6 mb-8",
                     match stage {
@@ -96,7 +71,7 @@ pub fn CentralDisplay(state: SimState) -> Element {
                     }
                 }
 
-                div { class: "bg-white flex-1 p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden flex flex-col",
+                div { class: "bg-slate-800 flex-1 p-6 rounded-2xl border border-slate-700/50 shadow-inner relative overflow-hidden flex flex-col",
                     h3 { class: "text-gray-400 mb-4 text-xs font-bold tracking-widest",
                         if stage == Stage::Printing { "PERFIL TÉRMICO DE ROSENTHAL" } else { "CINÉTICA DE REACCIÓN EDO" }
                     }
