@@ -1,25 +1,41 @@
 use crate::models::{HornoFlashInput, ConvertidorInput, AfinoInput, ElectrolysisInput, AtomizationInput, PrintingInput, ProcessReport, SystemStatus};
 
-/// Motor de Física y FSM
-/// Interlocks basados en contexto_simulador.md Tabulador de Alarmas
-
 pub fn evaluate_flash(input: &HornoFlashInput) -> ProcessReport {
     if input.o2_flow < 20 {
         return ProcessReport {
+            primary_output: "Concentrado sin fundir".into(),
             output_purity: 25.0,
             byproducts: "Escoria Congelada".into(),
-            status: SystemStatus::Critical("Mata fría. El Convertidor no tiene energía de activación. Bloqueo de línea.".into()),
+            status: SystemStatus::Critical("Defecto de O2: Mata fría. El Convertidor no tiene energía de activación. Bloqueo de línea.".into()),
+        };
+    }
+    if input.o2_flow > 80 {
+        return ProcessReport {
+            primary_output: "Mata Oxidada (Magnetita)".into(),
+            output_purity: 30.0,
+            byproducts: "Fe3O4 Viscoso".into(),
+            status: SystemStatus::Critical("Exceso O2: Oxidación excesiva. Se quema hierro útil formando Magnetita que bloquea la escoria.".into()),
         };
     }
     if input.silica_flux < 10 {
         return ProcessReport {
+            primary_output: "Mata Impura".into(),
             output_purity: 40.0,
             byproducts: "Escoria Ultra-Viscosa".into(),
-            status: SystemStatus::Critical("Taponamiento de salidas por escoria. Falla mecánica simulada.".into()),
+            status: SystemStatus::Critical("Defecto Sílice: Taponamiento de salidas por escoria. Falla mecánica simulada.".into()),
+        };
+    }
+    if input.silica_flux > 80 {
+        return ProcessReport {
+            primary_output: "Mata de Baja Ley".into(),
+            output_purity: 55.0,
+            byproducts: "Abundante Escoria con Cobre".into(),
+            status: SystemStatus::Warning("Exceso Sílice: Generación de volumen innecesario de escoria que atrapa gotas de cobre valioso (Rentabilidad baja).".into()),
         };
     }
     
     ProcessReport {
+        primary_output: "Mata Líquida".into(),
         output_purity: 62.0,
         byproducts: "Escoria Férrica (FeSiO3)".into(),
         status: SystemStatus::Normal,
@@ -29,27 +45,39 @@ pub fn evaluate_flash(input: &HornoFlashInput) -> ProcessReport {
 pub fn evaluate_conversion(input: &ConvertidorInput) -> ProcessReport {
     if input.scrap_added < 10 {
         return ProcessReport {
+            primary_output: "Ninguno (Explosión)".into(),
             output_purity: 0.0,
-            byproducts: "Ninguno (Explosión)".into(),
-            status: SystemStatus::Fatal("Fusión del refractario por falta de refrigerante de chatarra. Riesgo de explosión. Detención total.".into()),
+            byproducts: "Refractario Fundido".into(),
+            status: SystemStatus::Fatal("Falta Chatarra: Fusión del refractario por falta de refrigerante. Riesgo de explosión. Detención total.".into()),
+        };
+    }
+    if input.scrap_added > 60 {
+        return ProcessReport {
+            primary_output: "Baño Congelado".into(),
+            output_purity: 62.0,
+            byproducts: "Chatarra sin fundir".into(),
+            status: SystemStatus::Fatal("Exceso Chatarra: Absorción térmica masiva. El baño de metal se enfrió, convertidor congelado (Pérdida total del equipo).".into()),
         };
     }
     if input.o2_flow < 40 {
         return ProcessReport {
+            primary_output: "Blíster Sucio".into(),
             output_purity: 90.0,
             byproducts: "SO2".into(),
-            status: SystemStatus::Critical("Oxidación lenta. Blíster contaminado con azufre e hierro. Lote rechazado.".into()),
+            status: SystemStatus::Critical("Defecto O2: Oxidación demasiada lenta. Blíster contaminado con azufre e hierro. Lote rechazado.".into()),
         };
     }
     if input.o2_flow > 80 {
         return ProcessReport {
+            primary_output: "Blíster Pobre".into(),
             output_purity: 97.0,
-            byproducts: "Cu2O (Pérdida de cobre en escoria)".into(),
-            status: SystemStatus::Warning("Oxidación excesiva daña el rendimiento final quemando el cobre valioso.".into()),
+            byproducts: "Cu2O (Pérdida de cobre)".into(),
+            status: SystemStatus::Warning("Exceso O2: Quema el propio cobre generado (Cu2O), viéndose perdido en la escoria.".into()),
         };
     }
     
     ProcessReport {
+        primary_output: "Cobre Blíster".into(),
         output_purity: 99.0,
         byproducts: "Gas SO2 (Capturado para Ácido)".into(),
         status: SystemStatus::Normal,
@@ -59,13 +87,23 @@ pub fn evaluate_conversion(input: &ConvertidorInput) -> ProcessReport {
 pub fn evaluate_afino(input: &AfinoInput) -> ProcessReport {
     if input.reducing_gas > 70 {
         return ProcessReport {
-            output_purity: 99.7,
-            byproducts: "Vapor de Agua".into(),
-            status: SystemStatus::Critical("Exceso de gas. Absorción de hidrógeno: Ánodos esponjosos/deformes causarán cortocircuito.".into()),
+            primary_output: "Ánodos Esponjosos".into(),
+            output_purity: 90.0,
+            byproducts: "Vapor de Agua / Hidrógeno Ocluido".into(),
+            status: SystemStatus::Critical("Exceso Gas: El metal absorbió hidrógeno. Cobre hierve y solidifica con porosidad (ánodos deformes).".into()),
+        };
+    }
+    if input.reducing_gas < 30 {
+        return ProcessReport {
+            primary_output: "Ánodos Quebradizos".into(),
+            output_purity: 90.0,
+            byproducts: "Oxígeno residual".into(),
+            status: SystemStatus::Critical("Defecto Gas: El oxígeno no se elimina. Cobre oxidado y quebradizo (los ánodos se fracturan bajo peso).".into()),
         };
     }
     
     ProcessReport {
+        primary_output: "Ánodos Sólidos".into(),
         output_purity: 99.7,
         byproducts: "H2O (Vapor)".into(),
         status: SystemStatus::Normal,
@@ -75,22 +113,25 @@ pub fn evaluate_afino(input: &AfinoInput) -> ProcessReport {
 pub fn evaluate_electrolysis(input: &ElectrolysisInput) -> ProcessReport {
     if input.current_amps > 80 {
         return ProcessReport {
+            primary_output: "Cátodo Contaminado".into(),
             output_purity: 99.8,
             byproducts: "Lodos Anódicos (Ag, Au)".into(),
-            status: SystemStatus::Fatal("Amperaje Excesivo: Cátodo arranca impurezas. Se pierde el grado 99.99%. No apto para 3D. Desvío a chatarra.".into()),
+            status: SystemStatus::Fatal("Amperaje Excesivo: Proceso 'sucio'. Arranca impurezas (Zn/Pb) en el cátodo. Perdido el grado 99.99%.".into()),
         };
     }
     if input.current_amps < 20 {
         return ProcessReport {
+            primary_output: "Cátodo Muy Delgado".into(),
             output_purity: 99.99,
-            byproducts: "Lodos Anódicos (Ag, Au)".into(),
-            status: SystemStatus::Warning("Flujo de material estancado por amperaje bajo. Pérdida de productividad.".into()),
+            byproducts: "Tasa muy baja de lodo".into(),
+            status: SystemStatus::Warning("Amperaje bajo: Tasa de deposición ineficiente. El flujo de material se estancó.".into()),
         };
     }
     
     ProcessReport {
+        primary_output: "Cátodos Ultra Alta Pureza".into(),
         output_purity: 99.99,
-        byproducts: "Lodos Anódicos Ricos en Plata/Oro".into(),
+        byproducts: "Lodos Anódicos Ricos (Ag, Au)".into(),
         status: SystemStatus::Normal,
     }
 }
@@ -98,13 +139,23 @@ pub fn evaluate_electrolysis(input: &ElectrolysisInput) -> ProcessReport {
 pub fn evaluate_atomization(input: &AtomizationInput) -> ProcessReport {
     if input.gas_pressure < 30 {
         return ProcessReport {
+            primary_output: "Polvo Gigante (Falla)".into(),
             output_purity: 99.99,
             byproducts: "Chatarra irregular".into(),
-            status: SystemStatus::Critical("Falta de fuerza de impacto. Polvo gigante irregular. La impresora 3D se atascará.".into()),
+            status: SystemStatus::Critical("Defecto Presión: Falta de fuerza de impacto. Polvo gigante o irregular que atasca la impresora 3D.".into()),
+        };
+    }
+    if input.gas_pressure > 80 {
+        return ProcessReport {
+            primary_output: "Polvo Ultrafino Satélite".into(),
+            output_purity: 99.99,
+            byproducts: "Nubes de polvo fino".into(),
+            status: SystemStatus::Critical("Exceso Presión: Pulverización excesiva. El polvo pierde fluidez y no se puede esparcir en la cama 3D.".into()),
         };
     }
     
     ProcessReport {
+        primary_output: "Polvo Esférico 3D (15-45 μm)".into(),
         output_purity: 99.99,
         byproducts: "Partículas Satélites Descartadas".into(),
         status: SystemStatus::Normal,
@@ -114,27 +165,29 @@ pub fn evaluate_atomization(input: &AtomizationInput) -> ProcessReport {
 pub fn evaluate_printing(input: &PrintingInput) -> ProcessReport {
     if input.laser_power < 30 {
         return ProcessReport {
+            primary_output: "Pieza Quebradiza/Porosa".into(),
             output_purity: 99.99,
             byproducts: "Polvo sin fundir".into(),
-            status: SystemStatus::Fatal("Falta de fusión por reflectividad del cobre. Pieza porosa e inservible.".into()),
+            status: SystemStatus::Fatal("Defecto Láser: No atraviesa conductividad del cobre. Partículas no se unen (falta de fusión).".into()),
         };
     }
     if input.laser_power > 80 {
         return ProcessReport {
+            primary_output: "Pieza Deformada".into(),
             output_purity: 99.99,
             byproducts: "Vapor de Cobre".into(),
-            status: SystemStatus::Warning("Exceso de energía genera cráteres y distorsión superficial.".into()),
+            status: SystemStatus::Critical("Exceso Láser: Evaporación térmica masiva. Desarrolla cráteres y distorsión superficial.".into()),
         };
     }
     
     ProcessReport {
+        primary_output: "Pieza Industrial Homogénea".into(),
         output_purity: 99.99,
-        byproducts: "Pieza Industrial Finalizada".into(),
+        byproducts: "Tensiones residuales aliviadas".into(),
         status: SystemStatus::Normal,
     }
 }
 
-/// Fórmulas térmicas para visualización en GUI:
 pub fn calculate_fusion_temp(base: f64, o2_input: i32) -> f64 {
     let heat_gen = o2_input as f64 * 2.5; 
     let rand_noise = rand::random::<f64>() * 10.0 - 5.0;

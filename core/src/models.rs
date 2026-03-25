@@ -89,6 +89,7 @@ pub struct PrintingInput {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct ProcessReport {
+    pub primary_output: String,
     pub output_purity: f64,
     pub byproducts: String,
     pub status: SystemStatus,

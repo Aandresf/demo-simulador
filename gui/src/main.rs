@@ -103,6 +103,18 @@ fn App() -> Element {
                 SystemStatus::Critical(_) | SystemStatus::Fatal(_) => "text-red-500",
             };
             
+            let output_color = match report.status {
+                SystemStatus::Fatal(_) | SystemStatus::Critical(_) => "text-red-500",
+                SystemStatus::Warning(_) => "text-amber-400",
+                SystemStatus::Normal => {
+                    if report.output_purity >= 90.0 {
+                        "text-emerald-400" // Excelente (Verde)
+                    } else {
+                        "text-white" // Bueno (Blanco)
+                    }
+                }
+            };
+            
             return rsx! {
                 div {
                     class: "flex flex-col items-center justify-center h-screen bg-[#0f172a] text-slate-200 font-sans",
@@ -117,6 +129,11 @@ fn App() -> Element {
                                     class: "border-b border-slate-700",
                                     th { class: "py-4 text-slate-300 font-bold", "Variable" }
                                     th { class: "py-4 text-slate-300 font-bold", "Resultado" }
+                                }
+                                tr {
+                                    class: "border-b border-slate-700 text-slate-200 bg-slate-700/50",
+                                    td { class: "py-4", "Material Principal (Salida)" }
+                                    td { class: "py-4 font-black {output_color} text-2xl tracking-widest uppercase", "{report.primary_output}" }
                                 }
                                 tr {
                                     class: "border-b border-slate-700 text-slate-400",

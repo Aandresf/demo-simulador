@@ -26,7 +26,6 @@ pub fn CentralCard(props: CentralCardProps) -> Element {
 pub fn CentralDisplay(props: CentralDisplayProps) -> Element {
     let state = props.state;
     let stage = *state.selected_stage.read();
-    let chart_color = get_chart_color(stage);
 
     let status = state.current_status.read().clone();
     let (status_color, status_border) = match status {
@@ -34,6 +33,13 @@ pub fn CentralDisplay(props: CentralDisplayProps) -> Element {
         SystemStatus::Warning(_) => ("text-amber-400", "border-amber-500/50 bg-amber-900/20"),
         SystemStatus::Critical(_) | SystemStatus::Fatal(_) => ("text-red-500", "border-red-500/50 bg-red-900/20"),
     };
+
+    let dummy_vec3 = use_signal(|| vec![]);
+    let dummy_vec2 = use_signal(|| vec![]);
+    let dummy_vec2_f64 = use_signal(|| vec![]);
+    let dummy_vec_i32 = use_signal(|| vec![]);
+    let dummy_matrix = use_signal(|| vec![]);
+    let dummy_f64 = use_signal(|| 0.0);
 
     rsx! {
         div {
@@ -91,17 +97,26 @@ pub fn CentralDisplay(props: CentralDisplayProps) -> Element {
                     }
                 }
 
-                div { class: "bg-slate-800 flex-1 p-6 rounded-2xl border border-slate-700/50 shadow-inner relative overflow-hidden flex flex-col",
-                    h3 { class: "text-gray-400 mb-4 text-xs font-bold tracking-widest",
-                        if stage == Stage::Printing { "PERFIL TÉRMICO DE ROSENTHAL" } else { "CINÉTICA DE REACCIÓN EDO" }
-                    }
-                    div { class: "flex items-end flex-1 gap-1",
-                        for _i in 0..40 {
-                            div {
-                                class: "w-full flex-1 rounded-t opacity-90 transition-all duration-500 {chart_color}",
-                                style: "height: {20.0 + rand::random::<f32>() * 80.0}%;"
-                            }
-                        }
+                div { class: "flex-1 w-full relative overflow-hidden flex flex-col",
+                    match stage {
+                        Stage::Fusion => rsx!{ crate::components::central_panel::charts::FlashFurnaceCharts { 
+                            temp_history: dummy_vec3, mata_vol: dummy_f64, escoria_vol: dummy_f64
+                        }},
+                        Stage::Conversion => rsx!{ crate::components::central_panel::charts::ConverterCharts { 
+                            temp_history: dummy_vec2, scrap_drop_events: dummy_vec_i32, cu_purity: dummy_f64, fe_purity: dummy_f64, s_purity: dummy_f64 
+                        }},
+                        Stage::Refining => rsx!{ crate::components::central_panel::charts::ThermalRefiningCharts { 
+                            residual_oxygen: dummy_f64, absorbed_hydrogen: dummy_f64 
+                        }},
+                        Stage::Electrolysis => rsx!{ crate::components::central_panel::charts::ElectrolysisCharts { 
+                            anode_mass: dummy_f64, cathode_mass: dummy_f64, impurity_history_ppm: dummy_vec2 
+                        }},
+                        Stage::Atomization => rsx!{ crate::components::central_panel::charts::AtomizationCharts { 
+                            particle_distribution: dummy_vec2_f64, gas_pressure: dummy_f64
+                        }},
+                        Stage::Printing => rsx!{ crate::components::central_panel::charts::AdditiveManufacturingCharts { 
+                            heat_matrix_2d: dummy_matrix, ved_history: dummy_vec2, ved_target: 0.0 
+                        }},
                     }
                 }
             }
