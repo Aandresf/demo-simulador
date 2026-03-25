@@ -31,7 +31,7 @@ pub fn get_card_styles(color: &str) -> (&'static str, &'static str) {
         "purple" => "text-purple-400",
         "indigo" => "text-indigo-400",
         "rose" => "text-rose-400",
-        _ => "text-gray-400"
+        _ => "text-slate-600"
     };
     (bg_color, text_color)
 }

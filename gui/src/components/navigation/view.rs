@@ -7,8 +7,8 @@ use super::controller::get_button_styles;
 pub fn Sidebar(props: NavigationProps) -> Element {
     rsx! {
         div {
-            class: "w-1/4 bg-slate-900 border-r border-slate-800 flex flex-col p-6 shadow-xl z-10",
-            h2 { class: "text-2xl font-bold mb-8 text-blue-400 tracking-wider", "CICLO DEL COBRE" }
+            class: "w-1/4 bg-white border-r border-slate-200 flex flex-col p-6 shadow-xl z-10",
+            h2 { class: "text-2xl font-bold mb-8 text-blue-600 tracking-wider", "CICLO DEL COBRE" }
             
             div { class: "flex flex-col gap-4",
                 StageButton { stage_val: Stage::Fusion, current: props.current_stage, onclick: move |s| props.on_stage_change.call(s) }
@@ -21,9 +21,9 @@ pub fn Sidebar(props: NavigationProps) -> Element {
 
             div { class: "mt-auto",
                 button {
-                    class: "w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg uppercase tracking-widest shadow-lg shadow-red-900/50 transition transform hover:scale-105 active:scale-95 opacity-50 cursor-not-allowed",
-                    disabled: true,
-                    "PARADA DE EMERGENCIA"
+                    class: "w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-400 hover:text-slate-600 font-medium rounded-lg text-sm tracking-wide transition flex items-center justify-center gap-2",
+                    onclick: move |_| props.on_restart.call(()),
+                    "🔄 Reiniciar Simulador"
                 }
             }
         }

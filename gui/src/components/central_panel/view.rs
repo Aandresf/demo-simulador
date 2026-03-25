@@ -1,26 +1,6 @@
 use dioxus::prelude::*;
 use simulador_core::models::{Stage, SystemStatus};
 use super::model::{CentralDisplayProps, CentralCardProps};
-use super::controller::{get_chart_color, get_card_styles};
-
-#[component]
-pub fn CentralCard(props: CentralCardProps) -> Element {
-    let width_pct = (props.current_f / props.max * 100.0).clamp(0.0, 100.0);
-    let (bg_color, text_color) = get_card_styles(props.color);
-
-    rsx! {
-        div { class: "bg-slate-800 p-6 rounded-2xl border border-slate-700/50 shadow-inner flex flex-col items-center justify-between",
-            h3 { class: "text-gray-400 mb-2 text-xs font-bold tracking-widest", "{props.title}" }
-            div { class: "text-4xl font-mono {text_color}", "{props.val}" }
-            div { class: "w-full h-3 bg-slate-900 rounded-full mt-6 overflow-hidden relative",
-                div { 
-                    class: "h-full {bg_color} transition-all duration-300",
-                    style: "width: {width_pct}%;"
-                }
-            }
-        }
-    }
-}
 
 #[component]
 pub fn CentralDisplay(props: CentralDisplayProps) -> Element {
@@ -29,95 +9,97 @@ pub fn CentralDisplay(props: CentralDisplayProps) -> Element {
 
     let status = state.current_status.read().clone();
     let (status_color, status_border) = match status {
-        SystemStatus::Normal => ("text-emerald-400", "border-emerald-500/50 bg-emerald-900/20"),
-        SystemStatus::Warning(_) => ("text-amber-400", "border-amber-500/50 bg-amber-900/20"),
-        SystemStatus::Critical(_) | SystemStatus::Fatal(_) => ("text-red-500", "border-red-500/50 bg-red-900/20"),
+        SystemStatus::Normal => ("text-emerald-600", "border-emerald-500/50 bg-emerald-100/50"),
+        SystemStatus::Warning(_) => ("text-amber-600", "border-amber-500/50 bg-amber-100/50"),
+        SystemStatus::Critical(_) | SystemStatus::Fatal(_) => ("text-red-600", "border-red-500/50 bg-red-100/50"),
     };
-
-    let dummy_vec3 = use_signal(|| vec![]);
-    let dummy_vec2 = use_signal(|| vec![]);
-    let dummy_vec2_f64 = use_signal(|| vec![]);
-    let dummy_vec_i32 = use_signal(|| vec![]);
-    let dummy_matrix = use_signal(|| vec![]);
-    let dummy_f64 = use_signal(|| 0.0);
 
     rsx! {
         div {
-            class: "w-2/4 flex flex-col p-8 bg-slate-900/50 relative overflow-y-auto gap-6",
+            class: "w-2/4 flex flex-col p-8 bg-slate-50 relative overflow-y-auto gap-6 border-x border-slate-200 shadow-xl z-20",
             
-            if *state.is_panic.read() {
+            div { class: "flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-300 shadow-sm",
                 div {
-                    class: "absolute inset-0 bg-red-900/40 z-0 animate-pulse pointer-events-none"
+                    h2 { class: "text-2xl font-black tracking-widest text-slate-800 uppercase mb-1", "{stage.to_string()}" }
+                    div { class: "text-slate-500 font-bold text-sm", "Simulando Dinámica en Tiempo Real" }
                 }
-            }
-            
-            // Objective Card (Top)
-            div { class: "z-10 w-full p-6 rounded-xl border border-slate-700 bg-slate-800/80 shadow-md",
-                p { class: "text-slate-300 font-medium italic text-lg leading-relaxed text-center", "{stage.objective()}" }
-            }
-            
-            // Status Card
-            div { class: "z-10 w-full p-4 rounded-xl border {status_border} shadow-md flex justify-between items-center transition-colors duration-500",
-                span { class: "text-slate-400 font-bold tracking-widest text-sm", "ESTADO DEL SISTEMA FSM:" }
-                span { class: "font-black tracking-wide {status_color}", "{status.message()}" }
-            }
-            
-            div { class: "z-10 flex-1 flex flex-col",
-                div { class: "flex justify-between items-end mb-6 mt-4",
-                    h1 { class: "text-3xl font-light text-slate-100", "{stage.to_string()}" }
-                    p { class: "text-slate-500 font-mono text-sm", "Tick: 1000ms" }
-                }
-                
-                div { class: "grid grid-cols-2 gap-6 mb-8",
-                    match stage {
-                        Stage::Fusion => rsx!{
-                            CentralCard { title: "TEMPERATURA (HORNO)", val: format!("{}°C", *state.temp.read() as i32), max: 2000.0, current_f: *state.temp.read(), color: "orange" }
-                            CentralCard { title: "VISCOSIDAD ESCORIA", val: format!("{:.1} Pa·s", simulador_core::physics::calculate_slag_viscosity(*state.temp.read())), max: 50.0, current_f: simulador_core::physics::calculate_slag_viscosity(*state.temp.read()), color: "amber" }
-                        },
-                        Stage::Conversion => rsx!{
-                            CentralCard { title: "TEMP. DEL BAÑO", val: format!("{}°C", *state.temp.read() as i32), max: 1500.0, current_f: *state.temp.read(), color: "orange" }
-                            CentralCard { title: "OXÍGENO INYECTADO", val: format!("{}%", state.conv_input.read().o2_flow), max: 100.0, current_f: state.conv_input.read().o2_flow as f64, color: "blue" }
-                        },
-                        Stage::Refining => rsx!{
-                            CentralCard { title: "GAS REDUCTOR", val: format!("{}%", state.afino_input.read().reducing_gas), max: 100.0, current_f: state.afino_input.read().reducing_gas as f64, color: "emerald" }
-                            CentralCard { title: "TEMPERATURA AFINO", val: format!("{}°C", *state.temp.read() as i32), max: 1500.0, current_f: *state.temp.read(), color: "orange" }
-                        },
-                        Stage::Electrolysis => rsx!{
-                            CentralCard { title: "SOBREPOTENCIAL TÉRMICO", val: format!("{}°C", *state.temp.read() as i32), max: 1000.0, current_f: *state.temp.read(), color: "blue" }
-                            CentralCard { title: "AMPERAJE (A)", val: format!("{} A", state.electro_input.read().current_amps), max: 100.0, current_f: state.electro_input.read().current_amps as f64, color: "purple" }
-                        },
-                        Stage::Atomization => rsx!{
-                            CentralCard { title: "TAMAÑO PARTÍCULA (d_m)", val: format!("{:.1} μm", simulador_core::physics::calculate_particle_size(state.atom_input.read().gas_pressure)), max: 200.0, current_f: simulador_core::physics::calculate_particle_size(state.atom_input.read().gas_pressure), color: "purple" }
-                            CentralCard { title: "PRESIÓN DE GAS", val: format!("{} PSI", state.atom_input.read().gas_pressure * 2), max: 200.0, current_f: (state.atom_input.read().gas_pressure * 2) as f64, color: "indigo" }
-                        },
-                        Stage::Printing => rsx!{
-                            CentralCard { title: "DENSIDAD ENERGÉTICA (VED)", val: format!("{:.1} J/mm³", simulador_core::physics::calculate_ved(state.print_input.read().laser_power)), max: 200.0, current_f: simulador_core::physics::calculate_ved(state.print_input.read().laser_power), color: "rose" }
-                            CentralCard { title: "TEMPERATURA FUSIÓN", val: format!("{}°C", *state.temp.read() as i32), max: 3000.0, current_f: *state.temp.read(), color: "orange" }
-                        }
+                div { class: "flex flex-col items-end",
+                    div { class: "text-xs font-bold text-slate-500 tracking-wider mb-1", "DIAGNÓSTICO FSM" }
+                    div { class: "px-4 py-2 rounded-lg border font-bold tracking-widest {status_color} {status_border} animate-pulse shadow-sm",
+                        "{status.message()}"
                     }
                 }
+            }
 
-                div { class: "flex-1 w-full relative overflow-hidden flex flex-col",
-                    match stage {
-                        Stage::Fusion => rsx!{ crate::components::central_panel::charts::FlashFurnaceCharts { 
-                            temp_history: dummy_vec3, mata_vol: dummy_f64, escoria_vol: dummy_f64
-                        }},
-                        Stage::Conversion => rsx!{ crate::components::central_panel::charts::ConverterCharts { 
-                            temp_history: dummy_vec2, scrap_drop_events: dummy_vec_i32, cu_purity: dummy_f64, fe_purity: dummy_f64, s_purity: dummy_f64 
-                        }},
-                        Stage::Refining => rsx!{ crate::components::central_panel::charts::ThermalRefiningCharts { 
-                            residual_oxygen: dummy_f64, absorbed_hydrogen: dummy_f64 
-                        }},
-                        Stage::Electrolysis => rsx!{ crate::components::central_panel::charts::ElectrolysisCharts { 
-                            anode_mass: dummy_f64, cathode_mass: dummy_f64, impurity_history_ppm: dummy_vec2 
-                        }},
-                        Stage::Atomization => rsx!{ crate::components::central_panel::charts::AtomizationCharts { 
-                            particle_distribution: dummy_vec2_f64, gas_pressure: dummy_f64
-                        }},
-                        Stage::Printing => rsx!{ crate::components::central_panel::charts::AdditiveManufacturingCharts { 
-                            heat_matrix_2d: dummy_matrix, ved_history: dummy_vec2, ved_target: 0.0 
-                        }},
+            div { class: "grid grid-cols-2 gap-4 h-32 shrink-0",
+                match stage {
+                    Stage::Fusion => rsx!{
+                        CentralCard { title: "TEMPERATURA (HORNO)", val: format!("{}°C", *state.temp.read() as i32), max: 2000.0, current_f: *state.temp.read(), color: "orange" }
+                        CentralCard { title: "VISCOSIDAD ESCORIA", val: format!("{:.1} Pa·s", simulador_core::physics::calculate_slag_viscosity(*state.temp.read())), max: 50.0, current_f: simulador_core::physics::calculate_slag_viscosity(*state.temp.read()), color: "amber" }
+                    },
+                    Stage::Conversion => rsx!{
+                        CentralCard { title: "TEMP. DEL BAÑO", val: format!("{}°C", *state.temp.read() as i32), max: 1500.0, current_f: *state.temp.read(), color: "orange" }
+                        CentralCard { title: "DENSIDAD MAT.", val: format!("{:.1} g/cm³", 4.5 + (*state.temp.read() / 2000.0)), max: 10.0, current_f: 5.0, color: "rose" }
+                    },
+                    Stage::Refining => rsx!{
+                        CentralCard { title: "PUREZA ESTIMADA", val: format!("99.{}%", 5 + (*state.temp.read() as i32 / 100)), max: 100.0, current_f: 99.5, color: "emerald" }
+                        CentralCard { title: "CANTIDAD O2", val: format!("{} ppm", *state.temp.read() as i32 / 10), max: 500.0, current_f: 100.0, color: "cyan" }
+                    },
+                    Stage::Electrolysis => rsx!{
+                        CentralCard { title: "VOLTAJE DE CELDA", val: format!("{:.2} V", *state.temp.read() / 800.0), max: 2.0, current_f: *state.temp.read() / 800.0, color: "emerald" }
+                        CentralCard { title: "AMPERAJE (A)", val: format!("{} A", state.electro_input.read().current_amps), max: 100.0, current_f: state.electro_input.read().current_amps as f64, color: "purple" }
+                    },
+                    Stage::Atomization => rsx!{
+                        CentralCard { title: "TAMAÑO PARTÍCULA (d)", val: format!("{:.1} μm", simulador_core::physics::calculate_particle_size(state.atom_input.read().gas_pressure)), max: 200.0, current_f: simulador_core::physics::calculate_particle_size(state.atom_input.read().gas_pressure), color: "purple" }
+                        CentralCard { title: "PRESIÓN DE GAS", val: format!("{} PSI", state.atom_input.read().gas_pressure * 2), max: 200.0, current_f: (state.atom_input.read().gas_pressure * 2) as f64, color: "indigo" }
+                    },
+                    Stage::Printing => rsx!{
+                        CentralCard { title: "DENSIDAD ENERGÉTICA (VED)", val: format!("{:.1} J/mm³", simulador_core::physics::calculate_ved(state.print_input.read().laser_power)), max: 200.0, current_f: simulador_core::physics::calculate_ved(state.print_input.read().laser_power), color: "rose" }
+                        CentralCard { title: "TEMPERATURA FUSIÓN", val: format!("{}°C", *state.temp.read() as i32), max: 3000.0, current_f: *state.temp.read(), color: "orange" }
                     }
+                }
+            }
+
+            div { class: "w-full h-[35%] relative overflow-hidden flex flex-col bg-white rounded-2xl border border-slate-300 p-2 shadow-sm mt-auto",
+                match stage {
+                    Stage::Fusion => rsx!{ crate::components::central_panel::charts::FlashFurnaceCharts { 
+                        o2_flow: state.flash_input.read().o2_flow as f64, silica: state.flash_input.read().silica_flux as f64
+                    }},
+                    Stage::Conversion => rsx!{ crate::components::central_panel::charts::ConverterCharts { 
+                        o2_flow: state.conv_input.read().o2_flow as f64, scrap: state.conv_input.read().scrap_added as f64
+                    }},
+                    Stage::Refining => rsx!{ crate::components::central_panel::charts::ThermalRefiningCharts { 
+                        red_gas: state.afino_input.read().reducing_gas as f64
+                    }},
+                    Stage::Electrolysis => rsx!{ crate::components::central_panel::charts::ElectrolysisCharts { 
+                        amps: state.electro_input.read().current_amps as f64
+                    }},
+                    Stage::Atomization => rsx!{ crate::components::central_panel::charts::AtomizationCharts { 
+                        pressure: state.atom_input.read().gas_pressure as f64
+                    }},
+                    Stage::Printing => rsx!{ crate::components::central_panel::charts::AdditiveManufacturingCharts { 
+                        laser: state.print_input.read().laser_power as f64
+                    }},
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn CentralCard(props: CentralCardProps) -> Element {
+    let percentage = (props.current_f / props.max) * 100.0;
+    
+    rsx! {
+        div { class: "bg-white p-4 rounded-xl border border-slate-300 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-{props.color}-400 transition-colors",
+            div { class: "flex justify-between items-start z-10",
+                div { class: "text-slate-500 font-bold text-xs tracking-widest", "{props.title}" }
+                div { class: "text-{props.color}-600 font-black text-xl drop-shadow-sm", "{props.val}" }
+            }
+            div { class: "h-2 w-full bg-slate-100 rounded-full mt-4 overflow-hidden z-10 border border-slate-200",
+                div {
+                    class: "h-full bg-{props.color}-500 rounded-full transition-all duration-1000 ease-out",
+                    style: "width: {percentage}%"
                 }
             }
         }

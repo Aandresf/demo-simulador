@@ -28,12 +28,12 @@ fn App() -> Element {
     let mut process_report = use_signal(|| None::<ProcessReport>);
 
     // Encapsulated Inputs
-    let flash_input = use_signal(|| HornoFlashInput { o2_flow: 50, silica_flux: 50 });
-    let conv_input = use_signal(|| ConvertidorInput { o2_flow: 50, scrap_added: 20 });
-    let afino_input = use_signal(|| AfinoInput { reducing_gas: 50 });
-    let electro_input = use_signal(|| ElectrolysisInput { current_amps: 50 });
-    let atom_input = use_signal(|| AtomizationInput { gas_pressure: 80 });
-    let print_input = use_signal(|| PrintingInput { laser_power: 50 });
+    let mut flash_input = use_signal(|| HornoFlashInput { o2_flow: 50, silica_flux: 50 });
+    let mut conv_input = use_signal(|| ConvertidorInput { o2_flow: 50, scrap_added: 20 });
+    let mut afino_input = use_signal(|| AfinoInput { reducing_gas: 50 });
+    let mut electro_input = use_signal(|| ElectrolysisInput { current_amps: 50 });
+    let mut atom_input = use_signal(|| AtomizationInput { gas_pressure: 80 });
+    let mut print_input = use_signal(|| PrintingInput { laser_power: 50 });
     
     let mut is_panic = use_signal(|| false);
     let mut is_finished = use_signal(|| false);
@@ -117,36 +117,36 @@ fn App() -> Element {
             
             return rsx! {
                 div {
-                    class: "flex flex-col items-center justify-center h-screen bg-[#0f172a] text-slate-200 font-sans",
+                    class: "flex flex-col items-center justify-center h-screen bg-slate-50 text-slate-800 font-sans",
                     h1 { class: "text-4xl font-bold mb-8 text-blue-400 tracking-wider", "REPORTE DE SALIDA" }
                     
                     div {
-                        class: "bg-slate-800 p-8 rounded-xl shadow-2xl w-1/2 border border-slate-700",
+                        class: "bg-white p-8 rounded-xl shadow-2xl w-1/2 border border-slate-300",
                         table {
                             class: "w-full text-left text-xl",
                             tbody {
                                 tr {
-                                    class: "border-b border-slate-700",
-                                    th { class: "py-4 text-slate-300 font-bold", "Variable" }
-                                    th { class: "py-4 text-slate-300 font-bold", "Resultado" }
+                                    class: "border-b border-slate-300",
+                                    th { class: "py-4 text-slate-700 font-bold", "Variable" }
+                                    th { class: "py-4 text-slate-700 font-bold", "Resultado" }
                                 }
                                 tr {
-                                    class: "border-b border-slate-700 text-slate-200 bg-slate-700/50",
+                                    class: "border-b border-slate-300 text-slate-800 bg-slate-200/50",
                                     td { class: "py-4", "Material Principal (Salida)" }
                                     td { class: "py-4 font-black {output_color} text-2xl tracking-widest uppercase", "{report.primary_output}" }
                                 }
                                 tr {
-                                    class: "border-b border-slate-700 text-slate-400",
+                                    class: "border-b border-slate-300 text-slate-600",
                                     td { class: "py-4", "Pureza Resultante" }
                                     td { class: "py-4 text-emerald-400 font-bold", "{report.output_purity}% Cu" }
                                 }
                                 tr {
-                                    class: "border-b border-slate-700 text-slate-400",
+                                    class: "border-b border-slate-300 text-slate-600",
                                     td { class: "py-4", "Subproductos" }
-                                    td { class: "py-4 font-bold text-slate-200", "{report.byproducts}" }
+                                    td { class: "py-4 font-bold text-slate-800", "{report.byproducts}" }
                                 }
                                 tr {
-                                    class: "text-slate-400",
+                                    class: "text-slate-600",
                                     td { class: "py-4", "Diagnóstico FSM" }
                                     td { class: "py-4 {status_color} font-bold text-sm", "{report.status.message()}" }
                                 }
@@ -162,7 +162,7 @@ fn App() -> Element {
                     
                     div { class: "mt-12 flex gap-4",
                         button {
-                            class: "px-6 py-3 bg-slate-600 hover:bg-slate-500 shadow-md text-white rounded-lg text-xl font-bold transition",
+                            class: "px-6 py-3 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 shadow-md rounded-lg text-xl font-bold transition",
                             onclick: move |_| {
                                 is_finished.set(false);
                             },
@@ -197,11 +197,27 @@ fn App() -> Element {
 
     rsx! {
         div {
-            class: "flex h-screen bg-[#0f172a] text-slate-200 font-sans overflow-hidden",
+            class: "flex h-screen bg-slate-50 text-slate-800 font-sans overflow-hidden",
             Sidebar { 
                 current_stage: *selected_stage.read(),
                 on_stage_change: move |s| selected_stage.set(s),
-                on_panic: move |_| is_panic.set(true)
+                on_restart: move |_| {
+                    selected_stage.set(Stage::Fusion);
+                    temp.set(1200.0);
+                    gas_level.set(100.0);
+                    current_status.set(SystemStatus::Normal);
+                    process_report.set(None);
+                    
+                    flash_input.set(HornoFlashInput { o2_flow: 50, silica_flux: 50 });
+                    conv_input.set(ConvertidorInput { o2_flow: 50, scrap_added: 20 });
+                    afino_input.set(AfinoInput { reducing_gas: 50 });
+                    electro_input.set(ElectrolysisInput { current_amps: 50 });
+                    atom_input.set(AtomizationInput { gas_pressure: 80 });
+                    print_input.set(PrintingInput { laser_power: 50 });
+                    
+                    is_panic.set(false);
+                    is_finished.set(false);
+                }
             }
             CentralDisplay { state }
             ControlPanel { state }

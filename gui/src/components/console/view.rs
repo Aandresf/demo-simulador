@@ -8,8 +8,8 @@ pub fn ControlPanel(state: SimState) -> Element {
     
     rsx! {
         div {
-            class: "w-1/4 bg-slate-800 border-l border-slate-700 p-6 flex flex-col shadow-lg z-10",
-            h2 { class: "text-xl font-black mb-8 text-slate-300 tracking-wider", "CONSOLA DE CONTROL" }
+            class: "w-1/4 bg-white border-l border-slate-300 p-6 flex flex-col shadow-lg z-10",
+            h2 { class: "text-xl font-black mb-8 text-slate-700 tracking-wider", "CONSOLA DE CONTROL" }
             
             div { class: "flex flex-col gap-10 flex-1",
                 match stage {
@@ -85,7 +85,7 @@ pub fn ControlPanel(state: SimState) -> Element {
             }
             
             button {
-                class: "w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-bold rounded-xl text-lg shadow-xl shadow-blue-900/40 transition transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50",
+                class: "w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-bold rounded-xl text-lg shadow-xl shadow-blue-200/40 transition transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50",
                 onclick: move |_| state.is_finished.set(true),
                 "EVALUAR DESEMPEÑO"
             }
@@ -99,7 +99,7 @@ fn ConsoleSlider(name: &'static str, val: i32, tooltip: &'static str, min: i32, 
         div { class: "flex flex-col gap-2 group",
             div { class: "flex justify-between items-end",
                 label { 
-                    class: "text-sm text-slate-400 tracking-wider font-bold cursor-help border-b border-dashed border-slate-600 transition-colors hover:text-white hover:border-blue-400",
+                    class: "text-sm text-slate-600 tracking-wider font-bold cursor-help border-b border-dashed border-slate-600 transition-colors hover:text-blue-600 hover:border-blue-400",
                     title: "{tooltip}",
                     "{name} ℹ️" 
                 }
@@ -115,7 +115,7 @@ fn ConsoleSlider(name: &'static str, val: i32, tooltip: &'static str, min: i32, 
                         on_change.call(v);
                     }
                 },
-                class: "w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition"
+                class: "w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition"
             }
         }
     }

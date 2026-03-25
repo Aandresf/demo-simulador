@@ -5,7 +5,7 @@ use simulador_core::models::Stage;
 pub struct NavigationProps {
     pub current_stage: Stage,
     pub on_stage_change: EventHandler<Stage>,
-    pub on_panic: EventHandler<()>,
+    pub on_restart: EventHandler<()>,
 }
 
 #[derive(Clone, PartialEq, Props)]
