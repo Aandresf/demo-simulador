@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::models::Stage;
+use simulador_core::models::Stage;
 
 #[derive(Clone, PartialEq, Props)]
 pub struct NavigationProps {

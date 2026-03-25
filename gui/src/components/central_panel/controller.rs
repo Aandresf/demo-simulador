@@ -1,10 +1,11 @@
-use crate::models::Stage;
+use simulador_core::models::Stage;
 
 pub fn get_chart_color(stage: Stage) -> &'static str {
     match stage {
         Stage::Fusion => "bg-orange-400",
         Stage::Conversion => "bg-amber-500",
-        Stage::Refining => "bg-blue-400",
+        Stage::Refining => "bg-emerald-400",
+        Stage::Electrolysis => "bg-blue-500",
         Stage::Atomization => "bg-purple-400",
         Stage::Printing => "bg-rose-400",
     }

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::models::SimState;
+use crate::state::SimState;
 
 #[derive(Clone, PartialEq, Props)]
 pub struct CentralDisplayProps {

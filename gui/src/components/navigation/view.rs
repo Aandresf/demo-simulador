@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::models::Stage;
+use simulador_core::models::Stage;
 use super::model::{NavigationProps, StageButtonProps};
 use super::controller::get_button_styles;
 
@@ -14,15 +14,16 @@ pub fn Sidebar(props: NavigationProps) -> Element {
                 StageButton { stage_val: Stage::Fusion, current: props.current_stage, onclick: move |s| props.on_stage_change.call(s) }
                 StageButton { stage_val: Stage::Conversion, current: props.current_stage, onclick: move |s| props.on_stage_change.call(s) }
                 StageButton { stage_val: Stage::Refining, current: props.current_stage, onclick: move |s| props.on_stage_change.call(s) }
+                StageButton { stage_val: Stage::Electrolysis, current: props.current_stage, onclick: move |s| props.on_stage_change.call(s) }
                 StageButton { stage_val: Stage::Atomization, current: props.current_stage, onclick: move |s| props.on_stage_change.call(s) }
                 StageButton { stage_val: Stage::Printing, current: props.current_stage, onclick: move |s| props.on_stage_change.call(s) }
             }
 
             div { class: "mt-auto",
                 button {
-                    class: "w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg uppercase tracking-widest shadow-lg shadow-red-900/50 transition transform hover:scale-105 active:scale-95",
-                    onclick: move |_| props.on_panic.call(()),
-                    "⚠️ ERROR EN HORNO"
+                    class: "w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg uppercase tracking-widest shadow-lg shadow-red-900/50 transition transform hover:scale-105 active:scale-95 opacity-50 cursor-not-allowed",
+                    disabled: true,
+                    "PARADA DE EMERGENCIA"
                 }
             }
         }
