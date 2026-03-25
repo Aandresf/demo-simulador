@@ -5,14 +5,14 @@ pub fn calculate_fusion_temp(base: f64, o2_input: i32) -> f64 {
     // Ecuación simplificada de Arrhenius (+ O2 = heat)
     let heat_gen = o2_input as f64 * 2.5; 
     let rand_noise = rand::random::<f64>() * 10.0 - 5.0;
-    1200.0 + heat_gen + rand_noise
+    base + heat_gen + rand_noise
 }
 
 pub fn calculate_conversion_temp(base: f64, scrap_rate: i32) -> f64 {
     // Problema de Stefan simplificado (chatarra actúa como sumidero térmico)
     let heat_loss = scrap_rate as f64 * 3.2;
     let rand_noise = rand::random::<f64>() * 8.0 - 4.0;
-    1150.0 - heat_loss + rand_noise
+    base - heat_loss + rand_noise
 }
 
 pub fn calculate_slag_viscosity(temp: f64) -> f64 {

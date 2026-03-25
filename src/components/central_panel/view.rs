@@ -54,18 +54,18 @@ pub fn CentralDisplay(props: CentralDisplayProps) -> Element {
                         },
                         Stage::Conversion => rsx!{
                             CentralCard { title: "TEMP. DEL BAÑO", val: format!("{}°C", *state.temp.read() as i32), max: 1500.0, current_f: *state.temp.read(), color: "orange" }
-                            CentralCard { title: "VISCOSIDAD ESCORIA", val: format!("{:.1} Pa·s", 5.0 + (1100.0 - *state.temp.read()) * 0.1), max: 50.0, current_f: 5.0 + (1100.0 - *state.temp.read()) * 0.1, color: "amber" }
+                            CentralCard { title: "VISCOSIDAD ESCORIA", val: format!("{:.1} Pa·s", crate::physics::calculate_slag_viscosity(*state.temp.read())), max: 50.0, current_f: crate::physics::calculate_slag_viscosity(*state.temp.read()), color: "amber" }
                         },
                         Stage::Refining => rsx!{
                             CentralCard { title: "SOBREPOTENCIAL (η)", val: format!("{} mV", *state.voltage.read() * 5), max: 500.0, current_f: (*state.voltage.read() * 5) as f64, color: "blue" }
                             CentralCard { title: "MASA DEPOSITADA", val: format!("{:.2} kg", 100.0 - *state.gas_level.read()), max: 100.0, current_f: 100.0 - *state.gas_level.read(), color: "emerald" }
                         },
                         Stage::Atomization => rsx!{
-                            CentralCard { title: "TAMAÑO PARTÍCULA (d_m)", val: format!("{} μm", 120 - *state.atomization_gas.read()), max: 200.0, current_f: (120 - *state.atomization_gas.read()) as f64, color: "purple" }
+                            CentralCard { title: "TAMAÑO PARTÍCULA (d_m)", val: format!("{:.1} μm", crate::physics::calculate_particle_size(*state.atomization_gas.read())), max: 200.0, current_f: crate::physics::calculate_particle_size(*state.atomization_gas.read()), color: "purple" }
                             CentralCard { title: "PRESIÓN DE GAS", val: format!("{} PSI", *state.atomization_gas.read() * 2), max: 200.0, current_f: (*state.atomization_gas.read() * 2) as f64, color: "indigo" }
                         },
                         Stage::Printing => rsx!{
-                            CentralCard { title: "DENSIDAD ENERGÉTICA (VED)", val: format!("{} J/mm³", *state.laser_power.read() * 2), max: 200.0, current_f: (*state.laser_power.read() * 2) as f64, color: "rose" }
+                            CentralCard { title: "DENSIDAD ENERGÉTICA (VED)", val: format!("{:.1} J/mm³", crate::physics::calculate_ved(*state.laser_power.read())), max: 200.0, current_f: crate::physics::calculate_ved(*state.laser_power.read()), color: "rose" }
                             CentralCard { title: "TEMPERATURA FUSIÓN", val: format!("{}°C", *state.temp.read() as i32), max: 3000.0, current_f: *state.temp.read(), color: "orange" }
                         }
                     }
